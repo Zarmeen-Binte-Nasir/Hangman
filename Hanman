@@ -1,0 +1,162 @@
+#import tkinter and random
+import tkinter as tk
+import random
+
+#Generate a GUI window
+window = tk.Tk()
+window.title("Hangman Game")
+window.geometry("600x600")
+
+#Open words from file
+def open_words():
+    try:
+        with open("wordlist.txt", "r") as file:
+            words = file.readlines()
+            return [word.strip().lower() for word in words]
+    except FileNotFoundError:
+        return "File not found."
+
+#Selecting a random word from the loaded list
+def select_word(words):
+    return random.choice(words)
+
+#Generating levels game variables
+level = 1
+words = open_words()
+word = select_word(words)
+guessed_letters = []
+wrong = 0
+
+
+# Hangman pictures from chatgpt code
+hangman_pics = [
+    """
+        +---+
+            |
+            |
+            |
+           ===
+    """,
+    """
+        +---+
+        O   |
+            |
+            |
+           ===
+    """,
+    """
+        +---+
+        O   |
+        |   |
+            |
+           ===
+    """,
+    """
+        +---+
+        O   |
+       /|   |
+            |
+           ===
+    """,
+    """
+        +---+
+        O   |
+       /|\\  |
+            |
+           ===
+    """,
+    """
+        +---+
+        O   |
+       /|\\  |
+       /    |
+           ===
+    """,
+    """
+        +---+
+        O   |
+       /|\\  |
+       / \\  |
+           ===
+    """
+]
+
+# Update the hangman display
+def update_hangman():
+    hangman_display.config(text=hangman_pics[wrong])
+
+# Check if the game is over understood from chatgpt
+def game_over():
+    global score
+    if (wrong >= 6):
+        game_status.config(text="Game Over! The word was: " + word)
+        letter_entry.config(state=tk.DISABLED)
+        enter_button.config(state=tk.DISABLED)
+        play_again_button.config(state=tk.NORMAL)
+    elif (set(word) <= set(guessed_letters)):
+        game_status.config(text="Congratulations! You won!")
+        letter_entry.config(state=tk.DISABLED)
+        enter_button.config(state=tk.DISABLED)
+        play_again_button.config(state=tk.NORMAL)
+
+# Handle letter submission
+def submit_letter():
+    global wrong  #global function from chatgpt
+    letter = letter_entry.get().lower()
+    letter_entry.delete(0, tk.END)
+    if (len(letter) == 1 and letter.isalpha()):
+        if (letter in guessed_letters):
+            game_status.config(text="You have already guessed that letter! Enter another letter.")
+        elif (letter in word):
+            guessed_letters.append(letter)
+            hidden_word = "".join([char if char in guessed_letters else "_" for char in word])
+            word_display.config(text=hidden_word)
+            game_over()
+        else:
+            wrong += 1
+            update_hangman()
+            game_over()
+    else:
+        game_status.config(text="Invalid input! You cannot enter more than one letter. Please enter a single letter.")
+
+# Restart the game
+def play_again():
+    global word, guessed_letters, wrong
+    word = select_word(words)
+    guessed_letters = []
+    wrong = 0
+    hangman_display.config(text=hangman_pics[0])
+    word_display.config(text="_ " * len(word))
+    game_status.config(text="Level: " + str(level))
+    letter_entry.config(state=tk.NORMAL)
+    enter_button.config(state=tk.NORMAL)
+    play_again_button.config(state=tk.DISABLED)
+
+# GUI layout
+#Hangman Display
+hangman_display = tk.Label(window, text=hangman_pics[0], font=("Courier New", 35))  #Courier New used for displaying code in a fixed width format
+hangman_display.pack()
+
+#Word Display
+word_display = tk.Label(window, text="_ " * len(word), font=("Arial", 22))
+word_display.pack()
+
+#Entering A Letter
+letter_entry = tk.Entry(window, font=("Arial", 22))
+letter_entry.pack()
+
+#Enter Button
+enter_button = tk.Button(window, text="Enter", command=submit_letter, font=("Arial", 22))
+enter_button.pack()
+
+#Result
+game_status = tk.Label(window, text="Level: " + str(level), font=("Arial", 26))
+game_status.pack()
+
+#Play Again Button
+play_again_button = tk.Button(window, text="Play Again", command=play_again, state=tk.NORMAL, font=("Arial", 22))
+play_again_button.pack()
+
+
+# Start the game
+window.mainloop()
